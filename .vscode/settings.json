@@ -1,0 +1,15 @@
+{
+    "editor.tabSize": 2,
+    "terminal.integrated.shell.windows": "C:\\Windows\\sysnative\\bash.exe",
+      // shfmt -h  to see detail usage , example: -i 4 -p
+    "shellformat.path": "C:\\Users\\taari\\go\\bin\\shfmt.exe",
+    "shellformat.flag": "-i 2 -p",
+
+    // format on save
+    "shellformat.runOnSave": false,
+
+    // show error message when format error
+    "shellformat.showError": true
+
+
+}

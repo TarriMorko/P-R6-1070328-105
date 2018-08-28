@@ -1,0 +1,15 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "SSH somethin",
+            "type": "shell",
+            // "command": "scp check_permission_and_md5.sh root@192.168.142.129:~;  ssh root@192.168.142.129 '~/check_permission_and_md5.sh'",
+            "command": "scp check_permission_and_md5.sh spos2@192.168.142.141:/src/mwadmin/check_permission_and_md5",
+            // "command": "scp check_permission_and_md5.sh root@192.168.142.129:/src/mwadmin/check_permission_and_md5",
+        }
+    ]
+}
+

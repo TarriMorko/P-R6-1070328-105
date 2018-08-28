@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Bash-Debug (select script from list of sh files)",
+            "type": "bashdb",
+            "request": "launch",
+            // "scriptPath": "${command.SelectScriptName}",
+            // "scriptPath": "/mnt/c/src/shell_script/compare_account.sh",
+            "scriptPath": "/src/shell_script/compare_account.sh",
+            "commandLineArguments": "",
+            "windows": {
+                "bashPath": "C:\\Windows\\sysnative\\bash.exe"
+            },
+            "linux": {
+                "bashPath": "bash"
+            },
+            "osx": {
+                "bashPath": "bash"
+            }
+        }
+    ]
+}
