@@ -11,7 +11,6 @@ _HOME="/src/mwadmin/check_permission_and_md5"
 
 BASE_PERMISSION="$_HOME/BASE_PERMISSION"
 PERMISSION_REPORT="$_HOME/PERMISSION_report_$(hostname)_$(date +%Y%m%d).txt"
-# DIRECTORY_YOU_WANT_TO_CHECK_PERMISSION="/bin /sbin /usr/bin /usr/sbin /etc"
 DIRECTORY_YOU_WANT_TO_CHECK_PERMISSION="/etc"
 
 BASE_MD5="$_HOME/BASE_MD5"
@@ -19,6 +18,7 @@ MD5_REPORT="$_HOME/MD5_report_$(hostname)_$(date +%Y%m%d).txt"
 DIRECTORY_YOU_WANT_TO_CHECK_MD5=$DIRECTORY_YOU_WANT_TO_CHECK_PERMISSION
 
 DIRECTORY_YOU_WANT_TO_CHECK="/home /home/spos2 /src /"
+ACCESS_REPORT="$_HOME/ACCESS_report_$(hostname)_$(date +%Y%m%d).txt"
 
 if [[ "$(uname)" = "Linux" ]]; then
   OS="Linux"
@@ -252,30 +252,33 @@ list_dirs_permissions_by_user() {
 
   # spos2    read       exec /home
 
-  ids=$(grep "^AllowUsers" /etc/ssh/sshd_config | sed 's/AllowUsers//g')
+  if [[ "$OS" = "Linux" ]]; then
+    ids=$(grep "^AllowUsers" /etc/ssh/sshd_config | sed 's/AllowUsers//g')
+  else
+    ids=$(lsuser ALL | grep rlogin=true | awk '{print $1}')
+  fi
+
   if [[ -z "${ids}" ]]; then
     ids=$(cat /etc/passwd | awk -F':' '/.*sh$/  {print $1}')
   fi
 
+  echo "Please wait..."
+  >$ACCESS_REPORT
+
   for id in $ids; do
-
     for _dir in $DIRECTORY_YOU_WANT_TO_CHECK; do
-
-      _readable=""
-      _writable=""
-      _execable=""
-
       sub_dirs=$(find $_dir -maxdepth 1 -type d)
+      echo "===================================================================" >>$ACCESS_REPORT
       for sub_dir in $sub_dirs; do
+        _readable=""
+        _writable=""
+        _execable=""
         su - $id -c "test -r '$sub_dir'" >/dev/null 2>&1 && _readable="read"
         su - $id -c "test -w '$sub_dir'" >/dev/null 2>&1 && _writable="write"
         su - $id -c "test -x '$sub_dir'" >/dev/null 2>&1 && _execable="exec"
-        printf "%-8s %-4s %-5s %-4s %-s \n" $id "$_readable" "$_writable" "$_execable" "$sub_dir"
+        printf "%-8s %-4s %-5s %-4s %-s \n" $id "$_readable" "$_writable" "$_execable" "$sub_dir" >>$ACCESS_REPORT
       done
-
     done
-
-    echo ""
   done
 }
 
