@@ -6,6 +6,12 @@
 2. 產生檔案與目錄權限基準檔 但是要by帳號
 
 
+## [0.8.4] - 2018-09-05
+### fixed
+- 裡面英文都改中文
+- AIX 的 find 沒有 maxdepth 選項，已修正
+- 移動相關參數到最前端
+
 ## [0.8.3] - 2018-09-04
 ### fixed
  - 選項5. AIX 用 rlogin=True 的帳號，Linux 用 sshd 裡面的 AllowUsers 帳號
