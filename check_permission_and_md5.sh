@@ -246,18 +246,24 @@ list_dirs_permissions_by_user() {
 
   for id in $ids; do
     for _dir in $DIRECTORY_YOU_WANT_TO_CHECK; do
-      # sub_dirs=$(find $_dir -maxdepth 1 -type d)
-      sub_dirs=$(find $_dir ! -path $_dir -prune -type d)
-      sub_dirs="$_dir  $sub_dirs"
-      echo "===================================================================" # >>$ACCESS_REPORT
+      echo "===================================================================" >>$ACCESS_REPORT
+      _readable=""
+      _writable=""
+      _execable=""
+      su - $id -c "test -r '$_dir'" >/dev/null 2>&1 && _readable="read"
+      su - $id -c "test -w '$_dir'" >/dev/null 2>&1 && _writable="write"
+      su - $id -c "test -x '$_dir'" >/dev/null 2>&1 && _execable="exec"
+      printf "%-8s %-4s %-5s %-4s %-s \n" $id "$_readable" "$_writable" "$_execable" "$_dir" >>$ACCESS_REPORT
+
+      sub_dirs=$(ls -la $_dir | grep "^d" | awk '{print $NF}' | grep -v "^\.")
       for sub_dir in $sub_dirs; do
         _readable=""
         _writable=""
         _execable=""
-        su - $id -c "test -r '$sub_dir'" >/dev/null 2>&1 && _readable="read"
-        su - $id -c "test -w '$sub_dir'" >/dev/null 2>&1 && _writable="write"
-        su - $id -c "test -x '$sub_dir'" >/dev/null 2>&1 && _execable="exec"
-        printf "%-8s %-4s %-5s %-4s %-s \n" $id "$_readable" "$_writable" "$_execable" "$sub_dir" # >>$ACCESS_REPORT
+        su - $id -c "test -r '$_dir/$sub_dir'" >/dev/null 2>&1 && _readable="read"
+        su - $id -c "test -w '$_dir/$sub_dir'" >/dev/null 2>&1 && _writable="write"
+        su - $id -c "test -x '$_dir/$sub_dir'" >/dev/null 2>&1 && _execable="exec"
+        printf "%-8s %-4s %-5s %-4s %-s \n" $id "$_readable" "$_writable" "$_execable" "$_dir/$sub_dir" >>$ACCESS_REPORT
       done
     done
   done
