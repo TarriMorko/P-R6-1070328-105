@@ -232,7 +232,7 @@ list_dirs_permissions_by_user() {
   # spos2    read       exec /home
 
   if [[ "$OS" = "Linux" ]]; then
-    ids=$(grep "^AllowUsers" /etc/ssh/sshd_config | sed 's/AllowUsers//g')
+    ids=$(grep "^AllowUsers" /etc/ssh/sshd_config | sed 's/AllowUsers//g' |sed 's/itmadm@10.0.31.235//g')
   else
     ids=$(lsuser ALL | grep rlogin=true | awk '{print $1}')
   fi
