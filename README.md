@@ -6,6 +6,11 @@
 2. 產生檔案與目錄權限基準檔 但是要by帳號
 
 
+## [0.8.6] - 2018-09-11
+### fixed
+- list_dirs_permissions_by_user 拿掉 su -，不然 su - 到 op 帳號會進入 menu
+
+
 ## [0.8.5] - 2018-09-10
 ### fixed
 - 排除 itmadm@10.0.31.235
