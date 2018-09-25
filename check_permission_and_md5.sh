@@ -1,23 +1,13 @@
 #!/bin/sh
 #
 #
-# please file these arg below
-# DIRECTORY_YOU_WANT_TO_CHECK             # check who can access these dir
-# DIRECTORY_YOU_WANT_TO_CHECK_PERMISSION  # scan file permission
-# DIRECTORY_YOU_WANT_TO_CHECK_MD5         # scan file hash
+# 建置帳號對程式及資料檔案相關權限之檢查功能介面，於帳號清查作業時一併列示清查
+# 使用前請先定義 以下參數
+# DIRECTORY_YOU_WANT_TO_CHECK_PERMISSION  #掃描這些目錄下所有檔案與目錄的權限
 
-DIRECTORY_YOU_WANT_TO_CHECK="/home /etc /src /"
-DIRECTORY_YOU_WANT_TO_CHECK_PERMISSION="/etc"
-DIRECTORY_YOU_WANT_TO_CHECK_MD5=$DIRECTORY_YOU_WANT_TO_CHECK_PERMISSION
+DIRECTORY_YOU_WANT_TO_CHECK="/home/spos1 /home/spos2"
 
 _HOME="/src/mwadmin/check_permission_and_md5"
-
-BASE_PERMISSION="$_HOME/BASE_PERMISSION"
-PERMISSION_REPORT="$_HOME/PERMISSION_report_$(hostname)_$(date +%Y%m%d).txt"
-
-BASE_MD5="$_HOME/BASE_MD5"
-MD5_REPORT="$_HOME/MD5_report_$(hostname)_$(date +%Y%m%d).txt"
-
 ACCESS_REPORT="$_HOME/ACCESS_report_$(hostname)_$(date +%Y%m%d).txt"
 
 if [[ "$(uname)" = "Linux" ]]; then
@@ -34,196 +24,12 @@ show_main_menu() {
        Hostname: $(hostname), Today is $(date +%Y-%m-%d)
   +====================================================================+
 
-      1. Check file permission.
-      2. check file hash.
-
-      3. Create file permission baseline.
-      4. Create file hash baseline.
-      
-      5. List account permission.
+      1. 執行帳號權限檢查。將結果寫入 ACCESS_report_$(hostname)_$(date +%Y%m%d).txt
+      2. 列出執行結果
 
       q.QUIT
 
 EOF
-}
-
-create_permission_today() {
-  # create permission baseline today.
-  # 
-  # example:
-  # /usr/bin/oldfind -rwxr-xr-x 0 0
-  # /usr/bin/catchsegv -rwxr-xr-x 0 0
-  # /usr/bin/xargs -rwxr-xr-x 0 0
-
-  echo "Please wait..."
-  _permission_today="$RANDOM"_temp
-  for dir in $DIRECTORY_YOU_WANT_TO_CHECK_PERMISSION; do
-    echo "Parsing $dir permission now..."
-    echo ""
-    if [[ $OS = "Linux" ]]; then
-
-      for i in $(find $dir | grep -v -f exclude_file); do
-        stat -c '%n %A %g %u' $i >>$_permission_today
-      done
-
-    else
-
-      for i in $(find $dir | grep -v -f exclude_file); do
-        echo $i" \c" >>$_permission_today
-        istat $i | tr '\n' ' ' | awk '{print $8, $10, $12}' >>$_permission_today
-      done
-
-    fi
-
-  done
-}
-
-diff_permission_today_with_BASE() {
-  diff $BASE_PERMISSION $_permission_today >$PERMISSION_REPORT
-  if [[ $? -eq 0 ]]; then
-    echo ''
-    echo "Permission Audit passed."
-    echo "Permission Audit passed." >>$PERMISSION_REPORT
-
-  else
-    # echo ''
-    # echo "Permission Audit failed. check $PERMISSION_REPORT for detail."
-    # echo "Permission Audit failed." >>$PERMISSION_REPORT
-    echo "Result:"
-    echo "===================================================================="
-    grep ">\|<" $PERMISSION_REPORT |
-      awk '{print $NF}' |
-      sort |
-      uniq |
-      xargs -I {} echo "These file has change its permission: {}"
-    echo "===================================================================="
-    echo "MD5 Audit failed."
-    echo "check $PERMISSION_REPORT for detail."
-
-  fi
-
-  rm $_permission_today
-}
-
-check_permission() {
-  create_permission_today
-  diff_permission_today_with_BASE
-}
-
-create_md5_today() {
-  # create hash baseline today.
-  #
-  # example:
-  # 85bc0fd26b358ea8edc0d4cab5e92044  /usr/bin/oldfind
-  # 795ad904fe7001acae1a149c4cd1ff3d  /usr/bin/catchsegv
-  # 2098c131c6f1f63777e9678b4be4e752  /usr/bin/xargs
-
-  _md5_today="$RANDOM"_temp
-
-  for dir in $DIRECTORY_YOU_WANT_TO_CHECK_MD5; do
-    echo "Parsing $dir hash now..."
-    echo ""
-    if [[ $OS = "Linux" ]]; then
-
-      for i in $(find $dir -type f | grep -v -f exclude_file); do
-        md5sum $i >>$_md5_today
-      done
-
-    else
-
-      for i in $(find $dir -type f | grep -v -f exclude_file); do
-        csum -h MD5 $i >>$_md5_today
-      done
-
-    fi
-  done
-
-}
-
-diff_md5_today_with_BASE() {
-  diff $BASE_MD5 $_md5_today >$MD5_REPORT
-
-  if [[ $? -eq 0 ]]; then
-    echo ""
-    echo "MD5 Audit passed."
-    # echo "MD5 Audit passed." >>$MD5_REPORT
-  else
-    echo "Result"
-    echo "===================================================================="
-    grep ">\|<" $MD5_REPORT |
-      awk '{print $NF}' |
-      sort |
-      uniq |
-      xargs -I {} echo "These file has change its permission: {}"
-    echo "===================================================================="
-    echo "MD5 Audit failed."
-    echo "check $MD5_REPORT for detail."
-  fi
-
-  rm $_md5_today
-}
-
-check_md5() {
-  create_md5_today
-  diff_md5_today_with_BASE
-}
-
-create_base_permission() {
-  # create permission baseline.
-  # 
-  # example:
-  # /usr/bin/oldfind -rwxr-xr-x 0 0
-  # /usr/bin/catchsegv -rwxr-xr-x 0 0
-  # /usr/bin/xargs -rwxr-xr-x 0 0
-
-  echo "Please wait..."
-  rm $BASE_PERMISSION >/dev/null 2>&1
-  for dir in $DIRECTORY_YOU_WANT_TO_CHECK_PERMISSION; do
-    echo "Parsing $dir permission now..."
-    echo ""
-    if [[ $OS = "Linux" ]]; then
-
-      for i in $(find $dir | grep -v -f exclude_file); do
-        stat -c '%n %A %g %u' $i >>$BASE_PERMISSION
-      done
-
-    else
-
-      for i in $(find $dir | grep -v -f exclude_file); do
-        echo $i" \c" >>$BASE_PERMISSION
-        istat $i | tr '\n' ' ' | awk '{print $8, $10, $12}' >>$BASE_PERMISSION
-      done
-
-    fi
-
-  done
-}
-
-create_base_md5() {
-  # create hash baseline.
-  #
-  # example:
-
-  echo "Please wait..."
-  rm $BASE_MD5 >/dev/null 2>&1
-  for dir in $DIRECTORY_YOU_WANT_TO_CHECK_MD5; do
-    echo "Parsing $dir hash now..."
-    echo ""
-    if [[ $OS = "Linux" ]]; then
-
-      for i in $(find $dir -type f | grep -v -f exclude_file); do
-        md5sum $i >>$BASE_MD5
-      done
-
-    else
-
-      for i in $(find $dir -type f | grep -v -f exclude_file); do
-        csum -h MD5 $i >>$BASE_MD5
-      done
-
-    fi
-
-  done
 }
 
 list_dirs_permissions_by_user() {
@@ -232,7 +38,7 @@ list_dirs_permissions_by_user() {
   # spos2    read       exec /home
 
   if [[ "$OS" = "Linux" ]]; then
-    ids=$(grep "^AllowUsers" /etc/ssh/sshd_config | sed 's/AllowUsers//g' |sed 's/itmadm@10.0.31.235//g')
+    ids=$(grep "^AllowUsers" /etc/ssh/sshd_config | sed 's/AllowUsers//g' | sed 's/itmadm@10.0.31.235//g')
   else
     ids=$(lsuser ALL | grep rlogin=true | awk '{print $1}')
   fi
@@ -242,7 +48,7 @@ list_dirs_permissions_by_user() {
   fi
 
   echo "Please wait..."
-  >$ACCESS_REPORT
+  echo HOSTNAME: $(hostname) "    " TIME: $(date +%Y/%m/%d) $(date +%H:%M:%S) >$ACCESS_REPORT
 
   for id in $ids; do
     for _dir in $DIRECTORY_YOU_WANT_TO_CHECK; do
@@ -269,6 +75,26 @@ list_dirs_permissions_by_user() {
   done
 }
 
+list_last_ACCESS_REPORT() {
+  if [ -f $ACCESS_REPORT ]; then
+    cat $ACCESS_REPORT
+  else
+    echo "沒有今天的報告。"
+    return
+  fi
+
+  reports=$(ls -tr ACCESS_*)
+
+  if [ -z $reports ]; then
+    echo "未產生過報告，請執行選項 1。"
+    return
+  fi
+
+  last_report=$(ls -tr ACCESS_* | tail -1)
+  cat $last_report
+
+}
+
 main() {
   # The entry for sub functions.
   while true; do
@@ -277,11 +103,8 @@ main() {
     read choice
     clear
     case $choice in
-    1) check_permission ;;
-    2) check_md5 ;;
-    3) create_base_permission ;;
-    4) create_base_md5 ;;
-    5) list_dirs_permissions_by_user ;;
+    1) list_dirs_permissions_by_user ;;
+    2) list_last_ACCESS_REPORT ;;
     [Qq])
       echo ''
       echo 'Thanks !! bye bye ^-^ !!!'
