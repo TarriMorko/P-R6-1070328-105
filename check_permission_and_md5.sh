@@ -1,11 +1,11 @@
 #!/bin/sh
 #
 #
-# å»ºç½®å¸³è™Ÿå°ç¨‹å¼åŠè³‡æ–™æª”æ¡ˆç›¸é—œæ¬Šé™ä¹‹æª¢æŸ¥åŠŸèƒ½ä»‹é¢ï¼Œæ–¼å¸³è™Ÿæ¸…æŸ¥ä½œæ¥­æ™‚ä¸€ä½µåˆ—ç¤ºæ¸…æŸ¥
-# ä½¿ç”¨å‰è«‹å…ˆå®šç¾© ä»¥ä¸‹åƒæ•¸
-# DIRECTORY_YOU_WANT_TO_CHECK_PERMISSION  #æƒæé€™äº›ç›®éŒ„ä¸‹æ‰€æœ‰æª”æ¡ˆèˆ‡ç›®éŒ„çš„æ¬Šé™
+# «Ø¸m±b¸¹¹ïµ{¦¡¤Î¸ê®ÆÀÉ®×¬ÛÃöÅv­­¤§ÀË¬d¥\¯à¤¶­±¡A©ó±b¸¹²M¬d§@·~®É¤@¨Ö¦C¥Ü²M¬d
+# ¨Ï¥Î«e½Ğ¥ı©w¸q ¥H¤U°Ñ¼Æ
+# DIRECTORY_YOU_WANT_TO_CHECK_PERMISSION  #±½´y³o¨Ç¥Ø¿ı¤U©Ò¦³ÀÉ®×»P¥Ø¿ıªºÅv­­
 
-DIRECTORY_YOU_WANT_TO_CHECK="/home/spos1 /home/spos2"
+DIRECTORY_YOU_WANT_TO_CHECK="/home"
 
 _HOME="/src/mwadmin/check_permission_and_md5"
 ACCESS_REPORT="$_HOME/ACCESS_report_$(hostname)_$(date +%Y%m%d).txt"
@@ -24,8 +24,8 @@ show_main_menu() {
        Hostname: $(hostname), Today is $(date +%Y-%m-%d)
   +====================================================================+
 
-      1. åŸ·è¡Œå¸³è™Ÿæ¬Šé™æª¢æŸ¥ã€‚å°‡çµæœå¯«å…¥ ACCESS_report_$(hostname)_$(date +%Y%m%d).txt
-      2. åˆ—å‡ºåŸ·è¡Œçµæœ
+      1. °õ¦æ±b¸¹Åv­­ÀË¬d¡C±Nµ²ªG¼g¤J ACCESS_report_$(hostname)_$(date +%Y%m%d).txt
+      2. ¦C¥X°õ¦æµ²ªG
 
       q.QUIT
 
@@ -59,7 +59,10 @@ list_dirs_permissions_by_user() {
       su $id -c "test -r '$_dir'" >/dev/null 2>&1 && _readable="read"
       su $id -c "test -w '$_dir'" >/dev/null 2>&1 && _writable="write"
       su $id -c "test -x '$_dir'" >/dev/null 2>&1 && _execable="exec"
-      printf "%-8s %-4s %-5s %-4s %-s \n" $id "$_readable" "$_writable" "$_execable" "$_dir" >>$ACCESS_REPORT
+
+      if ! [[ $_readable = "" && $_writable = "" && $_execable="" ]]; then
+        printf "%-8s %-4s %-5s %-4s %-s \n" $id "$_readable" "$_writable" "$_execable" "$_dir" >>$ACCESS_REPORT
+      fi
 
       sub_dirs=$(ls -la $_dir | grep "^d" | awk '{print $NF}' | grep -v "^\.")
       for sub_dir in $sub_dirs; do
@@ -69,7 +72,9 @@ list_dirs_permissions_by_user() {
         su $id -c "test -r '$_dir/$sub_dir'" >/dev/null 2>&1 && _readable="read"
         su $id -c "test -w '$_dir/$sub_dir'" >/dev/null 2>&1 && _writable="write"
         su $id -c "test -x '$_dir/$sub_dir'" >/dev/null 2>&1 && _execable="exec"
-        printf "%-8s %-4s %-5s %-4s %-s \n" $id "$_readable" "$_writable" "$_execable" "$_dir/$sub_dir" >>$ACCESS_REPORT
+        if ! [[ $_readable = "" && $_writable = "" && $_execable="" ]]; then
+          printf "%-8s %-4s %-5s %-4s %-s \n" $id "$_readable" "$_writable" "$_execable" "$_dir/$sub_dir" >>$ACCESS_REPORT
+        fi
       done
     done
   done
@@ -78,15 +83,16 @@ list_dirs_permissions_by_user() {
 list_last_ACCESS_REPORT() {
   if [ -f $ACCESS_REPORT ]; then
     cat $ACCESS_REPORT
+    return
   else
-    echo "æ²’æœ‰ä»Šå¤©çš„å ±å‘Šã€‚"
+    echo "¨S¦³¤µ¤Ñªº³ø§i¡C"
     return
   fi
 
   reports=$(ls -tr ACCESS_*)
 
-  if [ -z $reports ]; then
-    echo "æœªç”¢ç”Ÿéå ±å‘Šï¼Œè«‹åŸ·è¡Œé¸é … 1ã€‚"
+  if [ -z "${reports}" ]; then
+    echo "¥¼²£¥Í¹L³ø§i¡A½Ğ°õ¦æ¿ï¶µ 1¡C"
     return
   fi
 
